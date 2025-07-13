@@ -1,10 +1,16 @@
 FROM maven:3.8.3-openjdk-11 AS build
-WORKDIR spotify-api-integration
-COPY . .
-RUN mvn -f pom.xml clean package -DskipTests
+WORKDIR /app
+
+COPY pom.xml .
+COPY src ./src
+
+RUN mvn clean package -DskipTests
 
 FROM openjdk:11.0.11-jdk-slim
-WORKDIR spotify-api-integration
-COPY --from=build spotify-api-integration/target/spotify-api-integration-0.0.1-SNAPSHOT.jar spotify-api-integration.jar
+WORKDIR /app
+
+COPY --from=build /app/target/spotify-api-integration-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","spotify-api-integration.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
