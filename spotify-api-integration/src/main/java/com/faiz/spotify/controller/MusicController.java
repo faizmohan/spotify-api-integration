@@ -130,19 +130,31 @@ public class MusicController {
 					user.setCurrent_playing_track("");
 				}
 
-				apiUrl = "https://api.spotify.com/v1/me/player/currently-playing";
-				apiResponse = restTemplate.exchange(apiUrl, HttpMethod.GET, apiRequest, String.class);
+				apiUrl = "https://api.spotify.com/v1/me/player/pause";
+				try {
+					apiResponse = restTemplate.exchange(apiUrl, HttpMethod.GET, apiRequest, String.class);
+					if (apiResponse.getStatusCode().is2xxSuccessful()) {
 
-				if (apiResponse.getStatusCode().is2xxSuccessful()) {
+						user.setPause(apiResponse.getBody());
+					} else {
+						root = objectMapper.readTree(apiResponse.getBody());
+						items = root.path("error");
 
-					user.setPause(apiResponse.getBody());
-				} else {
-					root = objectMapper.readTree(apiResponse.getBody());
-					items = root.path("error");
+						String msg = items.path("message").asText();
+						user.setPause(msg);
 
-					String msg = items.path("message").asText();
-					user.setPause(msg);
+					}
+				} catch (HttpClientErrorException ex) {
+					String responseBody = ex.getResponseBodyAsString();
+					root = objectMapper.readTree(responseBody);
+					String msg = root.path("error").path("message").asText();
+					user.setPause("Error: " + msg);
 
+				} catch (HttpServerErrorException ex) {
+					user.setPause("Spotify server error: " + ex.getStatusCode());
+
+				} catch (Exception ex) {
+					user.setPause("Unexpected error: " + ex.getMessage());
 				}
 
 				apiUrl = "https://api.spotify.com/v1/me";
