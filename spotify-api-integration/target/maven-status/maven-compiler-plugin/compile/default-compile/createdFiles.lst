@@ -1,0 +1,3 @@
+com\faiz\spotify\controller\MusicController.class
+com\faiz\spotify\SpotifyApiIntegrationApplication.class
+com\faiz\spotify\config\SpotifyConfig.class
